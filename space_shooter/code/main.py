@@ -8,6 +8,13 @@ window_width, window_height = 1280, 720
 display_surface = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption('Space Shooter')
 
+#surface creation
+surf = pygame.Surface((100,200))
+surf.fill('orange')
+#now this surface created will only be visible when we actually attach or join it to the display surface by 
+#using the blit method in the draw section of while loop.
+#blit method - draws the surface on the display surface
+
 #to keep the code running and keep the screen visible, we can run the following code:
 # while True:
 #     pass
@@ -25,7 +32,8 @@ while running:
     #draw the game - take all the elements in the while loop before and draws it
     #update() - updates entire window, flip() - updates part of window we want to
     #filling the screen with a colour
-    display_surface.fill('red')
+    display_surface.fill('darkgray')
+    display_surface.blit(surf, (100,150))
     pygame.display.update()
 
 #uninitializes everything and closes the game properly
