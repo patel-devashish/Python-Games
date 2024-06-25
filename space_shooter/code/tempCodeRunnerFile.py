@@ -1,1 +1,1 @@
-display_surface.fill('darkgray')
+display_surface.blit(player_surf, (x,150))
