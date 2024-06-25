@@ -27,8 +27,19 @@ x = 100
 # print(join("space_shooter", "images", "player.png"))
 #convert_alpha() - to increase fps as this conversion makes it easier for pygame to process
 player_surf = pygame.image.load(join("space_shooter", "images", "player.png")).convert_alpha()
+#using RECT concept for surface pos and placement
+player_rect = player_surf.get_frect(center=(window_width/2, window_height/2))
+#the goal is to bounce the player off the walls left and right so we define direction with 1 for right and -1 for left
+player_direction = 1
+
 star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha()
 star_positions = [(randint(0, window_width), randint(0, window_height)) for i in range(20)]
+
+meteor_surf = pygame.image.load(join("space_shooter", "images", "meteor.png")).convert_alpha()
+meteor_rect = meteor_surf.get_frect(center = (window_width/2, window_height/2))
+
+laser_surf = pygame.image.load(join("space_shooter", "images", "laser.png")).convert_alpha()
+laser_rect = laser_surf.get_frect(bottomleft = (20, window_height-20))
 #to keep the code running and keep the screen visible, we can run the following code:
 # while True:
 #     pass
@@ -55,10 +66,18 @@ while running:
     #for i in range(20):
         #display_surface.blit(star_surf, (randint(0, window_width), randint(0, window_height)))
         #this bit of code upwards creates twinkling stars which rerenders every frame of the game as this runs inside the while loop.
-        #to stop thatwe can run the randint part outside the loop and use it once inside.
+        #to stop that we can run the randint part outside the loop and use it once inside.
         display_surface.blit(star_surf, pos)
-    x += 0.2  #here is the increment to move the surface
-    display_surface.blit(player_surf, (x,150))
+    display_surface.blit(meteor_surf, meteor_rect)
+    display_surface.blit(laser_surf, laser_rect)
+
+    #player movement
+    # if player_rect.right < window_width: #to stop the spaceship going out of the screen
+    #     player_rect.left += 0.2 #we increment the value to move it
+    player_rect.x += player_direction * 0.4     # x here means left and similarly y means right
+    if player_rect.right > window_width or player_rect.left < 0:
+        player_direction *= -1 #this will reverse the direction of the player
+    display_surface.blit(player_surf, player_rect)
     pygame.display.update()
 
 #uninitializes everything and closes the game properly
