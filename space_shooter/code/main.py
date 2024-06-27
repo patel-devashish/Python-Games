@@ -77,7 +77,7 @@ while running:
     player_rect.x += player_direction * 0.4     # x here means left and similarly y means right
     if player_rect.right > window_width or player_rect.left < 0:
         player_direction *= -1 #this will reverse the direction of the player
-    display_surface.blit(player_surf, player_rect)
+    display_surface.blit(player_surf, player_rect) # player_rect or any rect is player_rect.topleft by default
     pygame.display.update()
 
 #uninitializes everything and closes the game properly
