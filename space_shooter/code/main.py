@@ -10,6 +10,7 @@ pygame.init()
 window_width, window_height = 1280, 720
 display_surface = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption('Space Shooter')
+clock  = pygame.time.Clock() # it can control the frame rate
 
 #plain surface creation
 surf = pygame.Surface((100,200))
@@ -30,7 +31,7 @@ player_surf = pygame.image.load(join("space_shooter", "images", "player.png")).c
 #using RECT concept for surface pos and placement
 player_rect = player_surf.get_frect(center=(window_width/2, window_height/2))
 #the goal is to bounce the player off the walls left and right so we define direction with 1 for right and -1 for left
-player_direction = 1
+player_direction = pygame.math.Vector2(20,-10) # using vectors for movement and direction
 
 star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha()
 star_positions = [(randint(0, window_width), randint(0, window_height)) for i in range(20)]
@@ -47,12 +48,12 @@ laser_rect = laser_surf.get_frect(bottomleft = (20, window_height-20))
 # So we use the following code:
 running = True
 while running:
+    clock.tick(24) #specify the frame rate
     #event loop - we can access all the events.
     for event in pygame.event.get():
         #if the user wants to quit the game
         if event.type == pygame.QUIT:
             running = False
-
 
     #draw the game - take all the elements in the while loop before and draws it
     #also the drawing order matters, as we go down, things drawn are layered on top of the things already drawn
@@ -74,9 +75,10 @@ while running:
     #player movement
     # if player_rect.right < window_width: #to stop the spaceship going out of the screen
     #     player_rect.left += 0.2 #we increment the value to move it
-    player_rect.x += player_direction * 0.4     # x here means left and similarly y means right
-    if player_rect.right > window_width or player_rect.left < 0:
-        player_direction *= -1 #this will reverse the direction of the player
+    # player_rect.x += player_direction * 1     # x here means left and similarly y means right
+    # if player_rect.right > window_width or player_rect.left < 0:
+    #     player_direction *= -1 #this will reverse the direction of the player
+    player_rect.center += player_direction
     display_surface.blit(player_surf, player_rect) # player_rect or any rect is player_rect.topleft by default
     pygame.display.update()
 
