@@ -31,7 +31,9 @@ player_surf = pygame.image.load(join("space_shooter", "images", "player.png")).c
 #using RECT concept for surface pos and placement
 player_rect = player_surf.get_frect(center=(window_width/2, window_height/2))
 #the goal is to bounce the player off the walls left and right so we define direction with 1 for right and -1 for left
-player_direction = pygame.math.Vector2(20,-10) # using vectors for movement and direction
+player_direction = pygame.math.Vector2(1,1) # using vectors for movement and direction
+#when developing actual games we want the above values to be fairly low to control speed
+player_speed = 300
 
 star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha()
 star_positions = [(randint(0, window_width), randint(0, window_height)) for i in range(20)]
@@ -48,7 +50,10 @@ laser_rect = laser_surf.get_frect(bottomleft = (20, window_height-20))
 # So we use the following code:
 running = True
 while running:
-    clock.tick(24) #specify the frame rate
+    dt = clock.tick() / 1000 #specify the frame rate
+    #using the delta time concept to give the game equal speed in any pc i.e. framerate independence
+    #so now the argument inside tick() will change only how often we draw the game when earlier it changed the speed as well
+    #print(clock.get_fps())
     #event loop - we can access all the events.
     for event in pygame.event.get():
         #if the user wants to quit the game
@@ -78,7 +83,11 @@ while running:
     # player_rect.x += player_direction * 1     # x here means left and similarly y means right
     # if player_rect.right > window_width or player_rect.left < 0:
     #     player_direction *= -1 #this will reverse the direction of the player
-    player_rect.center += player_direction
+    if player_rect.right >= window_width or player_rect.left <= 0:
+        player_direction[0] *= -1
+    elif player_rect.bottom >= window_height or player_rect.top <= 0:
+        player_direction[1] *= -1
+    player_rect.center += player_direction * player_speed * dt
     display_surface.blit(player_surf, player_rect) # player_rect or any rect is player_rect.topleft by default
     pygame.display.update()
 
