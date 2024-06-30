@@ -31,7 +31,7 @@ player_surf = pygame.image.load(join("space_shooter", "images", "player.png")).c
 #using RECT concept for surface pos and placement
 player_rect = player_surf.get_frect(center=(window_width/2, window_height/2))
 #the goal is to bounce the player off the walls left and right so we define direction with 1 for right and -1 for left
-player_direction = pygame.math.Vector2(1,1) # using vectors for movement and direction
+player_direction = pygame.math.Vector2() # using vectors for movement and direction
 #when developing actual games we want the above values to be fairly low to control speed
 player_speed = 300
 
@@ -59,6 +59,40 @@ while running:
         #if the user wants to quit the game
         if event.type == pygame.QUIT:
             running = False
+        # getting user input through event loop
+        # if event.type == pygame.KEYDOWN and event.key == pygame.K_1:
+        #     print(1)
+        #getting input in the event loop, the output is displayed only once even if the button is pressed down continuously.
+        #to check, uncomment the above two lines.
+
+        # if event.type == pygame.MOUSEMOTION:
+        #     player_rect.center = event.pos
+
+    #input
+    #print(pygame.mouse.get_rel())
+    # keys = pygame.key.get_pressed()
+    # if keys[pygame.K_1]:
+    #     print(1)
+    #getting input outside the event loop, the output keeps getting displayed as long as the button in being pressed down.
+    #to check, uncomment the above three lines.
+    keys = pygame.key.get_pressed()
+    # if keys[pygame.K_RIGHT]:
+    #     player_direction.x = 1
+    # else:
+    #     player_direction.x = 0
+    # condensing above 4 lines in one line and also adding left movement
+    player_direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
+    player_direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
+    player_direction = player_direction.normalize() if player_direction else player_direction
+    #line just above reduces the diagonal speed to one which got increased to greater than 1 due to vector sum of two directions
+    player_rect.center += player_direction * player_speed * dt
+    #print(player_direction)
+
+    #exercise 2
+    #does what the event loop does, despite holding the spacebar, "fire laser" printing once
+    recent_keys = pygame.key.get_just_pressed()
+    if recent_keys[pygame.K_SPACE]:
+        print("fire laser")
 
     #draw the game - take all the elements in the while loop before and draws it
     #also the drawing order matters, as we go down, things drawn are layered on top of the things already drawn
@@ -83,11 +117,13 @@ while running:
     # player_rect.x += player_direction * 1     # x here means left and similarly y means right
     # if player_rect.right > window_width or player_rect.left < 0:
     #     player_direction *= -1 #this will reverse the direction of the player
-    if player_rect.right >= window_width or player_rect.left <= 0:
-        player_direction[0] *= -1
-    elif player_rect.bottom >= window_height or player_rect.top <= 0:
-        player_direction[1] *= -1
-    player_rect.center += player_direction * player_speed * dt
+
+    #exercise 1 
+    # if player_rect.right >= window_width or player_rect.left <= 0:
+    #     player_direction[0] *= -1
+    # elif player_rect.bottom >= window_height or player_rect.top <= 0:
+    #     player_direction[1] *= -1
+    # player_rect.center += player_direction * player_speed * dt
     display_surface.blit(player_surf, player_rect) # player_rect or any rect is player_rect.topleft by default
     pygame.display.update()
 
