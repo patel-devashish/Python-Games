@@ -3,6 +3,20 @@ import pygame
 from os.path import join
 from random import randint
 
+#organising the code using Sprites(classes with surface and rect inbuilt) in pygame
+class Player(pygame.sprite.Sprite):
+    def __init__(self, groups):
+        super().__init__(groups)
+        self.image = pygame.image.load(join("space_shooter", "images", "player.png")).convert_alpha()
+        self.rect = self.image.get_frect(center=(window_width/2, window_height/2))
+        self.direction = pygame.Vector2()
+    
+    def update(self):
+        self.direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
+        self.direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
+        self.direction = self.direction.normalize() if self.direction else self.direction
+        # self.rect.center += self.direction * player_speed * dt
+
 #initialising pygame
 pygame.init()
 
@@ -21,19 +35,21 @@ surf.fill('orange')
 
 #now let's try to move our surface. We do that by in[de]crementing the position of surface in the loop
 x = 100 
+all_sprites = pygame.sprite.Group() #using pygame Group to draw and update sprites 
+player = Player(all_sprites) #instance of Player class
 
 #importing an image - using image as a surface (same using blit)
 # now since different OS has different preference of slashes when writing the path of a file, to make the code universally accepted
 # we will use the jion function instead to write the file path instead of the string, "space_shoooter/images/player.png"
 # print(join("space_shooter", "images", "player.png"))
 #convert_alpha() - to increase fps as this conversion makes it easier for pygame to process
-player_surf = pygame.image.load(join("space_shooter", "images", "player.png")).convert_alpha()
-#using RECT concept for surface pos and placement
-player_rect = player_surf.get_frect(center=(window_width/2, window_height/2))
-#the goal is to bounce the player off the walls left and right so we define direction with 1 for right and -1 for left
-player_direction = pygame.math.Vector2() # using vectors for movement and direction
-#when developing actual games we want the above values to be fairly low to control speed
-player_speed = 300
+# player_surf = pygame.image.load(join("space_shooter", "images", "player.png")).convert_alpha()
+# #using RECT concept for surface pos and placement
+# player_rect = player_surf.get_frect(center=(window_width/2, window_height/2))
+# #the goal is to bounce the player off the walls left and right so we define direction with 1 for right and -1 for left
+# player_direction = pygame.math.Vector2() # using vectors for movement and direction
+# #when developing actual games we want the above values to be fairly low to control speed
+# player_speed = 300
 
 star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha()
 star_positions = [(randint(0, window_width), randint(0, window_height)) for i in range(20)]
@@ -81,18 +97,20 @@ while running:
     # else:
     #     player_direction.x = 0
     # condensing above 4 lines in one line and also adding left movement
-    player_direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
-    player_direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
-    player_direction = player_direction.normalize() if player_direction else player_direction
-    #line just above reduces the diagonal speed to one which got increased to greater than 1 due to vector sum of two directions
-    player_rect.center += player_direction * player_speed * dt
-    #print(player_direction)
+    # player_direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
+    # player_direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
+    # player_direction = player_direction.normalize() if player_direction else player_direction
+    # #line just above reduces the diagonal speed to one which got increased to greater than 1 due to vector sum of two directions
+    # player_rect.center += player_direction * player_speed * dt
+    # #print(player_direction)
 
     #exercise 2
     #does what the event loop does, despite holding the spacebar, "fire laser" printing once
-    recent_keys = pygame.key.get_just_pressed()
-    if recent_keys[pygame.K_SPACE]:
-        print("fire laser")
+    # recent_keys = pygame.key.get_just_pressed()
+    # if recent_keys[pygame.K_SPACE]:
+    #     print("fire laser")
+
+    all_sprites.update()
 
     #draw the game - take all the elements in the while loop before and draws it
     #also the drawing order matters, as we go down, things drawn are layered on top of the things already drawn
@@ -124,7 +142,9 @@ while running:
     # elif player_rect.bottom >= window_height or player_rect.top <= 0:
     #     player_direction[1] *= -1
     # player_rect.center += player_direction * player_speed * dt
-    display_surface.blit(player_surf, player_rect) # player_rect or any rect is player_rect.topleft by default
+    # display_surface.blit(player_surf, player_rect) # player_rect or any rect is player_rect.topleft by default
+    # display_surface.blit(player.image, player.rect) #bad (but possible) approach to display
+    all_sprites.draw(display_surface)
     pygame.display.update()
 
 #uninitializes everything and closes the game properly
