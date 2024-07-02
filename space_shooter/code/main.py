@@ -1,7 +1,7 @@
 import pygame
 #for using the join function below
 from os.path import join
-from random import randint
+from random import randint, uniform
 
 #organising the code using Sprites(classes with surface and rect inbuilt) in pygame
 class Player(pygame.sprite.Sprite):
@@ -14,7 +14,7 @@ class Player(pygame.sprite.Sprite):
         #cooldown - to not give the player unlimited power of shooting lasers and give the laser a cooldown duration in which it doesent fire even if pressed
         self.can_shoot = True
         self.laser_shoot_time = 0
-        self.cooldown_duration = 400
+        self.cooldown_duration = 200
     
     def laser_timer(self):
         if not self.can_shoot:
@@ -31,11 +31,10 @@ class Player(pygame.sprite.Sprite):
 
         recent_keys = pygame.key.get_just_pressed()
         if recent_keys[pygame.K_SPACE] and self.can_shoot:
-            print("fire laser")
+            Laser(laser_surf, self.rect.midtop, all_sprites)
             self.can_shoot = False
             self.laser_shoot_time = pygame.time.get_ticks()
         self.laser_timer()
-
 class Star(pygame.sprite.Sprite):
     def __init__(self, groups, surf):
         super().__init__(groups)
@@ -43,6 +42,33 @@ class Star(pygame.sprite.Sprite):
         #to optimize the code, we can write the above line outside the class, since this class is being called 20 times, this 
         #line will be called 20 times, which is not efficient.
         self.rect = self.image.get_frect(center = (randint(0, window_width), randint(0, window_height)))
+class Laser(pygame.sprite.Sprite):
+    def __init__(self, surf, pos, groups):
+        super().__init__(groups)
+        self.image = surf
+        self.rect = self.image.get_frect(midbottom = pos)
+    
+    def update(self, dt):
+        self.rect.centery -= 400 * dt
+        #now since so much lasers are being shot every laser still exists though not visible in the screen, so to solve that we need to destroy them
+        #once they are out of the screen.
+        if self.rect.bottom <= 0:
+            self.kill()
+
+class Meteor(pygame.sprite.Sprite):
+    def __init__(self, surf, pos, groups):
+        super().__init__(groups)
+        self.image = surf
+        self.rect = self.image.get_frect(center = pos)
+        self.start_time = pygame.time.get_ticks()
+        self.lifetime = 3000
+        self.direction = pygame.Vector2(uniform(-0.5, 0.5),1)
+        self.speed = randint(400, 500)
+
+    def update(self, dt):
+        self.rect.center += self.direction * self.speed * dt
+        if pygame.time.get_ticks() - self.start_time >= self.lifetime:
+            self.kill() #well we can use the laser logic to kill meteor sprites which is more suitable but giving here another approach
 
 #initialising pygame
 pygame.init()
@@ -55,14 +81,14 @@ running = True
 clock  = pygame.time.Clock() # it can control the frame rate
 
 #plain surface creation
-surf = pygame.Surface((100,200))
-surf.fill('orange')
+# surf = pygame.Surface((100,200))
+# surf.fill('orange')
 #now this surface created will only be visible when we actually attach or join it to the display surface by 
 #using the blit method in the draw section of while loop.
 #blit method - draws the surface on the display surface
 
 #now let's try to move our surface. We do that by in[de]crementing the position of surface in the loop
-x = 100 
+# x = 100 
 all_sprites = pygame.sprite.Group() #using pygame Group to draw and update sprites 
 star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha() #through this, we are doing the import once
 for i in range(20):
@@ -85,10 +111,10 @@ player = Player(all_sprites) #instance of Player class
 # star_positions = [(randint(0, window_width), randint(0, window_height)) for i in range(20)]
 
 meteor_surf = pygame.image.load(join("space_shooter", "images", "meteor.png")).convert_alpha()
-meteor_rect = meteor_surf.get_frect(center = (window_width/2, window_height/2))
+#meteor_rect = meteor_surf.get_frect(center = (window_width/2, window_height/2))
 
 laser_surf = pygame.image.load(join("space_shooter", "images", "laser.png")).convert_alpha()
-laser_rect = laser_surf.get_frect(bottomleft = (20, window_height-20))
+#laser_rect = laser_surf.get_frect(bottomleft = (20, window_height-20))
 
 #working with time using custom events
 meteor_event = pygame.event.custom_type()
@@ -117,8 +143,9 @@ while running:
         # if event.type == pygame.MOUSEMOTION:
         #     player_rect.center = event.pos
         
-        # if event.type == meteor_event:
-        #     print("create meteor")
+        if event.type == meteor_event:
+            x,y = randint(0, window_width), randint(-200, -100)
+            Meteor(meteor_surf, (x,y), all_sprites)
 
     #input
     #print(pygame.mouse.get_rel())
