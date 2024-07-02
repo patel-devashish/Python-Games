@@ -10,12 +10,22 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.image.load(join("space_shooter", "images", "player.png")).convert_alpha()
         self.rect = self.image.get_frect(center=(window_width/2, window_height/2))
         self.direction = pygame.Vector2()
+        self.speed = 300
     
-    def update(self):
+    def update(self, dt):
+        keys = pygame.key.get_pressed()
         self.direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
         self.direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
         self.direction = self.direction.normalize() if self.direction else self.direction
-        # self.rect.center += self.direction * player_speed * dt
+        self.rect.center += self.direction * self.speed * dt
+
+class Star(pygame.sprite.Sprite):
+    def __init__(self, groups, surf):
+        super().__init__(groups)
+        self.image = surf
+        #to optimize the code, we can write the above line outside the class, since this class is being called 20 times, this 
+        #line will be called 20 times, which is not efficient.
+        self.rect = self.image.get_frect(center = (randint(0, window_width), randint(0, window_height)))
 
 #initialising pygame
 pygame.init()
@@ -24,6 +34,7 @@ pygame.init()
 window_width, window_height = 1280, 720
 display_surface = pygame.display.set_mode((window_width, window_height))
 pygame.display.set_caption('Space Shooter')
+running = True
 clock  = pygame.time.Clock() # it can control the frame rate
 
 #plain surface creation
@@ -36,8 +47,10 @@ surf.fill('orange')
 #now let's try to move our surface. We do that by in[de]crementing the position of surface in the loop
 x = 100 
 all_sprites = pygame.sprite.Group() #using pygame Group to draw and update sprites 
+star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha() #through this, we are doing the import once
+for i in range(20):
+    Star(all_sprites, star_surf)  #the order of these instance of classes decide which layer is on top of the other
 player = Player(all_sprites) #instance of Player class
-
 #importing an image - using image as a surface (same using blit)
 # now since different OS has different preference of slashes when writing the path of a file, to make the code universally accepted
 # we will use the jion function instead to write the file path instead of the string, "space_shoooter/images/player.png"
@@ -51,20 +64,24 @@ player = Player(all_sprites) #instance of Player class
 # #when developing actual games we want the above values to be fairly low to control speed
 # player_speed = 300
 
-star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha()
-star_positions = [(randint(0, window_width), randint(0, window_height)) for i in range(20)]
+# star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha()
+# star_positions = [(randint(0, window_width), randint(0, window_height)) for i in range(20)]
 
 meteor_surf = pygame.image.load(join("space_shooter", "images", "meteor.png")).convert_alpha()
 meteor_rect = meteor_surf.get_frect(center = (window_width/2, window_height/2))
 
 laser_surf = pygame.image.load(join("space_shooter", "images", "laser.png")).convert_alpha()
 laser_rect = laser_surf.get_frect(bottomleft = (20, window_height-20))
+
+#working with time using custom events
+meteor_event = pygame.event.custom_type()
+pygame.time.set_timer(meteor_event, 500)
+
 #to keep the code running and keep the screen visible, we can run the following code:
 # while True:
 #     pass
 # but this does not give us the option of closing the screen and we have an error in doing so.
 # So we use the following code:
-running = True
 while running:
     dt = clock.tick() / 1000 #specify the frame rate
     #using the delta time concept to give the game equal speed in any pc i.e. framerate independence
@@ -80,9 +97,10 @@ while running:
         #     print(1)
         #getting input in the event loop, the output is displayed only once even if the button is pressed down continuously.
         #to check, uncomment the above two lines.
-
         # if event.type == pygame.MOUSEMOTION:
         #     player_rect.center = event.pos
+        if event.type == meteor_event:
+            print("create meteor")
 
     #input
     #print(pygame.mouse.get_rel())
@@ -91,7 +109,7 @@ while running:
     #     print(1)
     #getting input outside the event loop, the output keeps getting displayed as long as the button in being pressed down.
     #to check, uncomment the above three lines.
-    keys = pygame.key.get_pressed()
+    # keys = pygame.key.get_pressed()
     # if keys[pygame.K_RIGHT]:
     #     player_direction.x = 1
     # else:
@@ -110,7 +128,7 @@ while running:
     # if recent_keys[pygame.K_SPACE]:
     #     print("fire laser")
 
-    all_sprites.update()
+    all_sprites.update(dt)
 
     #draw the game - take all the elements in the while loop before and draws it
     #also the drawing order matters, as we go down, things drawn are layered on top of the things already drawn
@@ -120,14 +138,14 @@ while running:
     display_surface.fill('darkgray')
     #display_surface.blit(surf, (x,150))           #if we remove the display_surface fill and run this code there will be a trailing effect on the 
     #surface because it is not being cleared every frame.
-    for pos in star_positions:
     #for i in range(20):
         #display_surface.blit(star_surf, (randint(0, window_width), randint(0, window_height)))
         #this bit of code upwards creates twinkling stars which rerenders every frame of the game as this runs inside the while loop.
         #to stop that we can run the randint part outside the loop and use it once inside.
-        display_surface.blit(star_surf, pos)
-    display_surface.blit(meteor_surf, meteor_rect)
-    display_surface.blit(laser_surf, laser_rect)
+    # for pos in star_positions:
+    #     display_surface.blit(star_surf, pos)
+    #display_surface.blit(meteor_surf, meteor_rect)
+    #display_surface.blit(laser_surf, laser_rect)
 
     #player movement
     # if player_rect.right < window_width: #to stop the spaceship going out of the screen
