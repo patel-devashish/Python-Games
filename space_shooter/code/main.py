@@ -31,7 +31,7 @@ class Player(pygame.sprite.Sprite):
 
         recent_keys = pygame.key.get_just_pressed()
         if recent_keys[pygame.K_SPACE] and self.can_shoot:
-            Laser(laser_surf, self.rect.midtop, all_sprites)
+            Laser(laser_surf, self.rect.midtop, (all_sprites, laser_sprites))
             self.can_shoot = False
             self.laser_shoot_time = pygame.time.get_ticks()
         self.laser_timer()
@@ -54,7 +54,6 @@ class Laser(pygame.sprite.Sprite):
         #once they are out of the screen.
         if self.rect.bottom <= 0:
             self.kill()
-
 class Meteor(pygame.sprite.Sprite):
     def __init__(self, surf, pos, groups):
         super().__init__(groups)
@@ -69,6 +68,17 @@ class Meteor(pygame.sprite.Sprite):
         self.rect.center += self.direction * self.speed * dt
         if pygame.time.get_ticks() - self.start_time >= self.lifetime:
             self.kill() #well we can use the laser logic to kill meteor sprites which is more suitable but giving here another approach
+
+def collision():
+    global running
+    collision_sprites = pygame.sprite.spritecollide(player, meteor_sprites, True)
+    if collision_sprites:    
+        running = False
+
+    for laser in laser_sprites:
+        collided_sprites = pygame.sprite.spritecollide(laser, meteor_sprites, True)
+        if collided_sprites:
+            laser.kill()
 
 #initialising pygame
 pygame.init()
@@ -90,6 +100,8 @@ clock  = pygame.time.Clock() # it can control the frame rate
 #now let's try to move our surface. We do that by in[de]crementing the position of surface in the loop
 # x = 100 
 all_sprites = pygame.sprite.Group() #using pygame Group to draw and update sprites 
+meteor_sprites = pygame.sprite.Group() #creating seperate sprite for meteor for sprite collision
+laser_sprites = pygame.sprite.Group() #same as above
 star_surf = pygame.image.load(join("space_shooter", "images", "star.png")).convert_alpha() #through this, we are doing the import once
 for i in range(20):
     Star(all_sprites, star_surf)  #the order of these instance of classes decide which layer is on top of the other
@@ -145,7 +157,7 @@ while running:
         
         if event.type == meteor_event:
             x,y = randint(0, window_width), randint(-200, -100)
-            Meteor(meteor_surf, (x,y), all_sprites)
+            Meteor(meteor_surf, (x,y), (all_sprites, meteor_sprites))
 
     #input
     #print(pygame.mouse.get_rel())
@@ -174,6 +186,9 @@ while running:
     #     print("fire laser")
 
     all_sprites.update(dt)
+
+    #sprite collision
+    collision()
 
     #draw the game - take all the elements in the while loop before and draws it
     #also the drawing order matters, as we go down, things drawn are layered on top of the things already drawn
@@ -209,6 +224,10 @@ while running:
     # display_surface.blit(player.image, player.rect) #bad (but possible) approach to display
     all_sprites.draw(display_surface)
     pygame.display.update()
+
+    # point and rect collision 
+    # print(player.rect.collidepoint(pygame.mouse.get_pos()))
+    # print(player_rect.colliderect(<any rect>))
 
 #uninitializes everything and closes the game properly
 pygame.quit()
