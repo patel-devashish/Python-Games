@@ -80,6 +80,15 @@ def collision():
         if collided_sprites:
             laser.kill()
 
+def display_score():
+    current_time = pygame.time.get_ticks() // 100
+    text_surf = font.render(str(current_time), True, (240 ,240,240))
+    text_rect = text_surf.get_rect(midbottom = (window_width / 2, window_height - 50))
+    display_surface.blit(text_surf,text_rect)
+    pygame.draw.rect(display_surface, (240,240,240), text_rect.inflate(20,20).move(0,-8), 5, 10) #this wraps a rectangle around the score but with no padding
+    #inflate method adds the padding here. But you will notice that the rect is a bit stretched downwards (foe letters like p, j, etc. which use down space more). 
+    # To move that up we use move
+
 #initialising pygame
 pygame.init()
 
@@ -127,6 +136,10 @@ meteor_surf = pygame.image.load(join("space_shooter", "images", "meteor.png")).c
 
 laser_surf = pygame.image.load(join("space_shooter", "images", "laser.png")).convert_alpha()
 #laser_rect = laser_surf.get_frect(bottomleft = (20, window_height-20))
+
+#creating font
+font = pygame.font.Font(join("space_shooter","images","Oxanium-Bold.ttf"), 40)
+# text_surf = font.render('text', True, (240 ,240,240))
 
 #working with time using custom events
 meteor_event = pygame.event.custom_type()
@@ -195,7 +208,7 @@ while running:
     #so the player will be on top of the stars, so rearrange.
     #update() - updates entire window, flip() - updates part of window we want to
     #filling the screen with a colour
-    display_surface.fill('darkgray')
+    display_surface.fill("#3a2e3f")
     #display_surface.blit(surf, (x,150))           #if we remove the display_surface fill and run this code there will be a trailing effect on the 
     #surface because it is not being cleared every frame.
     #for i in range(20):
@@ -222,8 +235,15 @@ while running:
     # player_rect.center += player_direction * player_speed * dt
     # display_surface.blit(player_surf, player_rect) # player_rect or any rect is player_rect.topleft by default
     # display_surface.blit(player.image, player.rect) #bad (but possible) approach to display
+    display_score()
     all_sprites.draw(display_surface)
+    
+    #drawing lines and polygons
+    # pygame.draw.line(display_surface, "red", (0,0), (500,500), 10)
+    # pygame.draw.rect(display_surface, "red", player.rect)
+
     pygame.display.update()
+
 
     # point and rect collision 
     # print(player.rect.collidepoint(pygame.mouse.get_pos()))
