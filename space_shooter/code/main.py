@@ -41,6 +41,7 @@ class Player(pygame.sprite.Sprite):
             Laser(laser_surf, self.rect.midtop, (all_sprites, laser_sprites))
             self.can_shoot = False
             self.laser_shoot_time = pygame.time.get_ticks()
+            laser_sound.play()
         self.laser_timer()
 class Star(pygame.sprite.Sprite):
     def __init__(self, groups, surf):
@@ -65,6 +66,7 @@ class Laser(pygame.sprite.Sprite):
 class Meteor(pygame.sprite.Sprite):
     def __init__(self, surf, pos, groups):
         super().__init__(groups)
+        self.original_surf = surf
         self.image = surf
         self.rect = self.image.get_frect(center = pos)
         self.start_time = pygame.time.get_ticks()
@@ -72,11 +74,31 @@ class Meteor(pygame.sprite.Sprite):
         self.direction = pygame.Vector2(uniform(-0.5, 0.5),1)
         self.speed = randint(400, 500)
         # self.mask = pygame.mask.from_surface(self.image)    #no need
+        self.rotaion_speed = randint(40, 80)
+        self.rotaion = 0
 
     def update(self, dt):
         self.rect.center += self.direction * self.speed * dt
         if pygame.time.get_ticks() - self.start_time >= self.lifetime:
             self.kill() #well we can use the laser logic to kill meteor sprites which is more suitable but giving here another approach
+        self.rotaion += self.rotaion_speed * dt
+        self.image = pygame.transform.rotozoom(self.original_surf, self.rotaion, 1)
+        self.rect = self.image.get_frect(center = self.rect.center)    
+
+class AnimatedExplosion(pygame.sprite.Sprite):
+    def __init__(self, frames, pos, groups):
+        super().__init__(groups)
+        self.frames = frames
+        self.frame_index = 0
+        self.image = frames[self.frame_index]
+        self.rect = self.image.get_frect(center = pos)
+
+    def update(self, dt):
+        self.frame_index += 20 * dt
+        if self.frame_index < len(self.frames):
+            self.image = self.frames[int(self.frame_index)]
+        else:
+            self.kill()
 
 def collision():
     global running
@@ -88,6 +110,8 @@ def collision():
         collided_sprites = pygame.sprite.spritecollide(laser, meteor_sprites, True)
         if collided_sprites:
             laser.kill()
+            AnimatedExplosion(explosion_frames, laser.rect.midtop, all_sprites)
+            explosion_sound.play()
 
 def display_score():
     current_time = pygame.time.get_ticks() // 100
@@ -149,6 +173,17 @@ laser_surf = pygame.image.load(join("space_shooter", "images", "laser.png")).con
 #creating font
 font = pygame.font.Font(join("space_shooter","images","Oxanium-Bold.ttf"), 40)
 # text_surf = font.render('text', True, (240 ,240,240))
+
+explosion_frames = [pygame.image.load(join("space_shooter", "images", "explosion", f"{i}.png")).convert_alpha() for i in range(21)]
+
+laser_sound = pygame.mixer.Sound(join("space_shooter","audio","laser.wav"))
+laser_sound.set_volume(0.2)
+explosion_sound = pygame.mixer.Sound(join("space_shooter","audio","explosion.wav"))
+explosion_sound.set_volume(0.2)
+# damage_sound = pygame.mixer.Sound(join("space_shooter","audio","damage.ogg")) #game over as soon as hit by meteor
+game_music = pygame.mixer.Sound(join("space_shooter","audio","game_music.wav"))
+game_music.set_volume(0.1)
+game_music.play(loops = -1) # -1 for indefinite loop as expected from a game music
 
 #working with time using custom events
 meteor_event = pygame.event.custom_type()
